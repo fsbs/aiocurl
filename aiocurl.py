@@ -89,8 +89,9 @@ class CurlMulti:
 
     def _timer_callback(self, timeout_ms):
         "libcurl timer callback: schedule/cancel a timeout action."
-        if timeout_ms == -1 and self._timer:
+        if self._timer:
             self._timer.cancel()
+        if timeout_ms == -1:
             self._timer = None
         else:
             loop = _asyncio.get_running_loop()
