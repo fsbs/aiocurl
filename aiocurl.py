@@ -49,6 +49,14 @@ class Curl:
         """
         self._multi.stop(self)
 
+    def cancel(self, handle: Curl):
+        """
+        Cancel the running transfer.
+
+        The perform() coroutine will raise asyncio.CancelledError.
+        """
+        self._multi.cancel(self)
+
     def close(self):
         "Stop the transfer if running and close this curl handle."
         self._multi.close()
@@ -136,7 +144,7 @@ class CurlMulti:
         self._transfers[handle] = future
         return future
 
-    def _remove_handle(self, handle: Curl, result=None, exception=None):
+    def _remove_handle(self, handle: Curl, result=None, exception=None, cancel=False):
         "Remove a handle and set its future."
         # This can call our socket_callback to unregister socket events.
         self._multi.remove_handle(handle._handle)
@@ -144,7 +152,9 @@ class CurlMulti:
 
         # Set the future for this transfer.
         future = self._transfers.pop(handle)
-        if exception:
+        if cancel:
+            future.cancel()
+        elif exception:
             future.set_exception(exception)
         else:
             future.set_result(result)
@@ -169,6 +179,14 @@ class CurlMulti:
         """
         # This will make perform() return immediately when yielded to.
         self._remove_handle(handle, result=None)
+
+    def cancel(self, handle: Curl):
+        """
+        Cancel a running transfer.
+
+        The corresponding perform() coroutine will raise asyncio.CancelledError.
+        """
+        self._remove_handle(handle, cancel=True)
 
     # Closing mid-transfer: considered wrong, but this cleans up the event loop.
     def close(self):
