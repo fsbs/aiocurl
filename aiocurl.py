@@ -23,9 +23,13 @@ version = 'aiocurl/0.0.1 %s' % version
 error.__module__ = 'aiocurl'
 
 
-class Curl(CurlSync):
+class Curl:
     def __init__(self):
+        self._handle = CurlSync()
         self._multi = CurlMulti()
+
+    def __getattr__(self, name):
+        return getattr(self._handle, name)
 
     async def perform(self):
         """
@@ -48,7 +52,7 @@ class Curl(CurlSync):
     def close(self):
         "Stop the transfer if running and close this curl handle."
         self._multi.close()
-        super().close()
+        self._handle.close()
 
 
 # Don't inherit pycurl.CurlMulti - hide conflicting methods.
@@ -67,6 +71,9 @@ class CurlMulti:
 
         # aiocurl.Curl handles mapped to asyncio.Future objects.
         self._transfers = {}
+
+        # pycurl.Curl handles mapped to aiocurl.Curl handles
+        self._handles = {}
 
     def setopt(self, option, value):
         if option in (M_SOCKETFUNCTION, M_TIMERFUNCTION):
@@ -110,10 +117,10 @@ class CurlMulti:
         more_info, succ_handles, fail_handles = self._multi.info_read()
 
         for handle in succ_handles:
-            self._remove_handle(handle, result=handle)
+            self._remove_handle(self._handles[handle], result=handle)
 
         for handle, errno, errmsg in fail_handles:
-            self._remove_handle(handle, exception=error(errno, errmsg))
+            self._remove_handle(self._handles[handle], exception=error(errno, errmsg))
 
         if more_info:
             self._update_transfers()
@@ -121,7 +128,8 @@ class CurlMulti:
     def _add_handle(self, handle: Curl):
         "Add a handle and return its future."
         # This will call our timer_callback to schedule a kick-start.
-        self._multi.add_handle(handle)
+        self._multi.add_handle(handle._handle)
+        self._handles[handle._handle] = handle
 
         # Create a future for this transfer.
         loop = _asyncio.get_running_loop()
@@ -129,10 +137,11 @@ class CurlMulti:
         self._transfers[handle] = future
         return future
 
-    def _remove_handle(self, handle, result=None, exception=None):
+    def _remove_handle(self, handle: Curl, result=None, exception=None):
         "Remove a handle and set its future."
         # This can call our socket_callback to unregister socket events.
-        self._multi.remove_handle(handle)
+        self._multi.remove_handle(handle._handle)
+        self._handles.pop(handle._handle)
 
         # Set the future for this transfer.
         future = self._transfers.pop(handle)
