@@ -55,7 +55,6 @@ class Curl:
         self._handle.close()
 
 
-# Don't inherit pycurl.CurlMulti - hide conflicting methods.
 class CurlMulti:
     def __init__(self):
         self._multi = CurlMultiSync()
