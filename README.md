@@ -94,7 +94,7 @@ else:
 This is just like stop(), except the corresponding perform() coroutine will be
 cancelled instead:
 
-```
+```python
 try:
     await handle.perform()
 except asyncio.CancelledError:
