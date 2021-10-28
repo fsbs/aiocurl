@@ -91,8 +91,13 @@ else:
 
 ### Cancelling a transfer ###
 
-This is just like stop(), except the corresponding perform() coroutine will be
-cancelled instead:
+This is just like stop()...
+
+```python
+handle.cancel()
+```
+
+...except the corresponding perform() coroutine will be cancelled instead:
 
 ```python
 try:
