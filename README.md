@@ -5,13 +5,11 @@ handle.setopt(aiocurl.URL, 'https://example.com')
 await handle.perform()
 ```
 
-**Note: currently this requires a patched version of PycURL!**
-
 
 How?
 ----
 
-Using libcurl's [socket\_action interface](https://everything.curl.dev/libcurl/drive/multi-socket) to let asyncio's event loop do all the work of [waiting for I/O](https://curl.se/libcurl/c/CURLMOPT_SOCKETFUNCTION.html) and [scheduling of timeouts](https://curl.se/libcurl/c/CURLMOPT_TIMERFUNCTION.html).
+Using libcurl's [socket interface](https://everything.curl.dev/libcurl/drive/multi-socket) to let asyncio's event loop do all the work of [waiting for I/O](https://curl.se/libcurl/c/CURLMOPT_SOCKETFUNCTION.html) and [scheduling of timeouts](https://curl.se/libcurl/c/CURLMOPT_TIMERFUNCTION.html).
 
 > multi\_socket supports multiple parallel transfers — all done in the same single thread — and have been used to run several tens of thousands of transfers in a single application. It is usually the API that makes the most sense if you do a large number (>100 or so) of parallel transfers.
 > 
@@ -90,14 +88,12 @@ else:
     print('stopped')
 ```
 
-Dependencies?
--------------
+
+Dependencies
+------------
 
 1. PycURL 7.43.0.4 or above. It has essential fixes that make event-driven transfers work. Older releases fail to relay libcurl's event messages.
-2. PycURL [subclass patch](https://github.com/pycurl/pycurl/pull/711). It makes extending of PycURL's classes possible. You can find the patch in [this branch](https://github.com/fsbs/pycurl/tree/add-subclass-support).
-3. *(optional)* Additional PycURL [event-related fixes](https://github.com/pycurl/pycurl/pull/708) that make pausing and resuming of transfers work.
-
-For now consider this module as a simple demonstration of what these PycURL fixes and additions make possible.
+2. *(optional)* Additional PycURL [event-related fixes](https://github.com/pycurl/pycurl/pull/708) that make pausing and resuming of transfers work.
 
 
 License
