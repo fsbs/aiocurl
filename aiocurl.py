@@ -19,7 +19,7 @@ from pycurl import Curl as CurlSync, CurlMulti as CurlMultiSync
 from pycurl import *
 
 
-version = 'aiocurl/0.0.1 %s' % version
+version = 'aiocurl/0.0.2 %s' % version
 error.__module__ = 'aiocurl'
 
 
