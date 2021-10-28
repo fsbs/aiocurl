@@ -89,6 +89,19 @@ else:
 ```
 
 
+### Cancelling a transfer ###
+
+This is just like stop(), except the corresponding perform() coroutine will be
+cancelled instead:
+
+```
+try:
+    await handle.perform()
+except asyncio.CancelledError:
+    print('cancelled')
+```
+
+
 Dependencies
 ------------
 
